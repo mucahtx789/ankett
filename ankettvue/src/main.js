@@ -5,6 +5,9 @@ import SurveyList from './components/SurveyList.vue';
 import Login from './components/Login.vue';
 import Register from './components/Register.vue';
 import SurveyDetail from './components/SurveyDetail.vue';
+import CreateSurvey from './components/CreateSurvey.vue';
+import TakeSurvey from './components/TakeSurvey.vue';
+
 
 // Vue Router'ı kurma
 const router = createRouter({
@@ -14,7 +17,9 @@ const router = createRouter({
     { path: '/login', component: Login },  // Login sayfası rotası
     { path: '/register', component: Register },
     { path: '/survey-list', component: SurveyList },
-    { path: '/survey/:surveyId', component: SurveyDetail },
+    { path: '/survey-detail/:surveyId', component: SurveyDetail },
+    { path: '/create-survey', component: CreateSurvey },
+    { path: '/take-survey/:surveyId', component: TakeSurvey },
   ],
 });
 

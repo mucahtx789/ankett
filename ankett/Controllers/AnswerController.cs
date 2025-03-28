@@ -1,4 +1,5 @@
 ﻿using ankett.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,35 +16,22 @@ namespace ankett.Controllers
             _context = context;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SubmitAnswer([FromBody] AnswerDto answerDto)
+        [HttpPost("submit")]
+        [Authorize(Roles = "Employee")]
+        public async Task<IActionResult> SubmitAnswers([FromBody] List<Answer> answers)
         {
-            var employee = await _context.Users.FirstOrDefaultAsync(u => u.Id == answerDto.EmployeeId && u.Role == UserRole.Employee);
-            if (employee == null) return Unauthorized();
-
-            var answer = new Answer
+            if (answers == null || answers.Count == 0)
             {
-                EmployeeId = answerDto.EmployeeId,
-                OptionId = answerDto.OptionId
-            };
+                return BadRequest("Yanıtlar boş olamaz.");
+            }
 
-            _context.Answers.Add(answer);
+            _context.Answers.AddRange(answers);
             await _context.SaveChangesAsync();
 
-            return Ok(answer);
+            return Ok(new { message = "Cevaplar başarıyla kaydedildi." });
         }
 
-        [HttpGet("my-answers/{employeeId}")]
-        public async Task<IActionResult> GetAnswers(int employeeId)
-        {
-            var answers = await _context.Answers
-                .Include(a => a.Option)
-                .ThenInclude(o => o.Question)
-                .Where(a => a.EmployeeId == employeeId)
-                .ToListAsync();
 
-            return Ok(answers);
-        }
     }
 
     public class AnswerDto

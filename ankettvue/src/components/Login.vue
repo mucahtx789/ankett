@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="container">
     <h1>Login</h1>
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
@@ -21,11 +21,18 @@
       </div>
 
       <button type="submit">Login</button>
+      <button @click="$router.push('/register')" class="reg">Kayıt Ol</button>
     </form>
+
+  </div>
+  <div>
+    
   </div>
 </template>
 
 <script>
+  import axios from 'axios';
+
   export default {
     data() {
       return {
@@ -34,33 +41,34 @@
       };
     },
     methods: {
-      handleSubmit() {
-        // Backend'e veri gönderme işlemi burada yapılacak
-        console.log('Username:', this.username);
-        console.log('Password:', this.password);
-
-        // API'ye login isteği göndermek isterseniz burada axios'u kullanabilirsiniz
-        axios
-          .post('/login', {
+      async handleSubmit() {
+        try {
+          const response = await axios.post('http://localhost:5295/api/user/login', {
             username: this.username,
             password: this.password,
-          })
-          .then(response => {
-            console.log('Login successful', response.data);
-            // Login başarılıysa, kullanıcıyı başka bir sayfaya yönlendirebilirsiniz
-            this.$router.push('/survey-list');
-          })
-          .catch(error => {
-            console.error('Login failed', error);
-            alert('Login failed');
           });
+
+          console.log('Login successful', response.data);
+
+          // Kullanıcı ID ve Role bilgisini sakla (localStorage veya Vuex kullanabilirsin)
+          const role = response.data.role === 0 ? 'Admin' : 'Employee'; // 0 -> Admin, 1 -> Employee
+          localStorage.setItem('userId', response.data.id);
+          localStorage.setItem('userRole', role);
+
+          // Kullanıcıyı anket sayfasına yönlendir
+          this.$router.push('/survey-list');
+
+        } catch (error) {
+          console.error('Login failed', error.response?.data || error.message);
+          alert(error.response?.data?.message || 'Login failed. Please check your credentials.');
+        }
       },
     },
   };
 </script>
 
 <style scoped>
-  .login-container {
+  .container {
     max-width: 400px;
     margin: 50px auto;
     padding: 20px;
@@ -99,9 +107,17 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .reg {
+    width: 25;
+    background-color: #04AA6D; /* Green */
+    text-align: center;
+    text-decoration: none;
   }
 
-    button:hover {
-      background-color: #0056b3;
-    }
+  button:hover {
+    background-color: #ffd800;
+  }
 </style>

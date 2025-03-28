@@ -2,45 +2,62 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace ankett.Controllers
+[Route("api/survey")]
+[ApiController]
+public class SurveyController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class SurveyController : ControllerBase
+    private readonly ApplicationDbContext _context;
+
+    public SurveyController(ApplicationDbContext context)
     {
-        private readonly ApplicationDbContext _context;
+        _context = context;
+    }
 
-        public SurveyController(ApplicationDbContext context)
+    // Anket oluştur (Sadece Admin yetkisi olanlar)
+    [HttpPost("create")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CreateSurvey([FromBody] Survey survey)
+    {
+        if (survey == null || string.IsNullOrWhiteSpace(survey.Title))
         {
-            _context = context;
+            return BadRequest("Anket başlığı boş olamaz.");
         }
 
-        [HttpPost]
-        [Authorize(Roles = "Admin")] // sadece admin yetkisi olanlar
-        public async Task<IActionResult> CreateSurvey([FromBody] Survey survey)
+        survey.CreatedAt = DateTime.UtcNow;
+        _context.Surveys.Add(survey);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Anket başarıyla oluşturuldu.", survey.Id });
+    }
+
+    // Tüm anketleri getir
+    [HttpGet]
+    public async Task<IActionResult> GetAllSurveys()
+    {
+        var surveys = await _context.Surveys.ToListAsync();
+        return Ok(surveys);
+    }
+
+    // Belirtilen anketin detaylarını getir
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSurveyById(int id)
+    {
+        var survey = await _context.Surveys
+            .Include(s => s.Questions)
+            .ThenInclude(q => q.Options)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (survey == null)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            survey.CreatedAt = DateTime.UtcNow;
-            _context.Surveys.Add(survey);
-            await _context.SaveChangesAsync();
-
-            return Ok(survey);
+            return NotFound("Anket bulunamadı.");
         }
 
-        [HttpGet("{surveyId}")]
-        public async Task<IActionResult> GetSurvey(int surveyId)
-        {
-            var survey = await _context.Surveys
-                .Include(s => s.Questions)
-                .ThenInclude(q => q.Options)
-                .FirstOrDefaultAsync(s => s.Id == surveyId);
-
-            if (survey == null) return NotFound();
-
-            return Ok(survey);
-        }
+        return Ok(survey);
     }
 
 }

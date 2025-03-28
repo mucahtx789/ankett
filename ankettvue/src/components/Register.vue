@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
     <h2>Register</h2>
     <form @submit.prevent="registerUser">
       <div>
@@ -21,6 +21,7 @@
       </div>
 
       <button type="submit">Register</button>
+      <button @click="$router.push('/login')">Login</button>
 
       <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
       <div v-if="successMessage" class="success">{{ successMessage }}</div>
@@ -74,4 +75,52 @@
   .success {
     color: green;
   }
+  .container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+
+
+    button:hover {
+      background-color: #ffd800;
+    }
 </style>
