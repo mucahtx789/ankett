@@ -10,23 +10,25 @@
     <!-- Anketler listeleniyor -->
     <ul>
       <li v-for="survey in surveys" :key="survey.id">
-        <span>{{ survey.title }}</span>
+        <div>
+          <span><strong>{{ survey.title }}</strong></span> -
+          <span>{{ formatDate(survey.createdAt) }}</span> <!-- Anket oluşturulma tarihi -->
+          <!-- Admin için anket detaylarına gitme butonu -->
+          <button v-if="userRole === 'Admin'" @click="goToSurveyDetail(survey.id)">
+            Detayları Gör
+          </button>
 
-        <!-- Admin için anket detaylarına gitme butonu -->
-        <button v-if="userRole === 'Admin'" @click="goToSurveyDetail(survey.id)">
-          Detayları Gör
-        </button>
+          <!-- Employee için anketi çözme butonu -->
+          <button v-if="userRole === 'Employee' && !completedSurveys.includes(survey.id)"
+                  @click="takeSurvey(survey.id)">
+            Çöz
+          </button>
 
-        <!-- Employee için anketi çözme butonu -->
-        <button v-if="userRole === 'Employee' && !completedSurveys.includes(survey.id)"
-                @click="takeSurvey(survey.id)">
-          Çöz
-        </button>
-
-        <!-- Employee için anketi çözüp çözülemediğini kontrol et -->
-        <span v-if="userRole === 'Employee' && completedSurveys.includes(survey.id)">
-          Çözüldü
-        </span>
+          <!-- Employee için anketi çözüp çözülemediğini kontrol et -->
+          <span v-if="userRole === 'Employee' && completedSurveys.includes(survey.id)">
+            Çözüldü
+          </span>
+        </div>
       </li>
     </ul>
   </div>
@@ -73,10 +75,15 @@
       // Employee için anketi çözme işlemi
       takeSurvey(surveyId) {
         this.$router.push(`/take-survey/${surveyId}`);
+      },
+
+      // Tarih formatlama
+      formatDate(dateString) {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
       }
     },
   };
- 
 </script>
 
 <style scoped>

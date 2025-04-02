@@ -111,7 +111,7 @@
     margin-bottom: 5px;
   }
   .reg {
-    width: 25;
+    width: 25%;
     background-color: #04AA6D; /* Green */
     text-align: center;
     text-decoration: none;

@@ -11,7 +11,7 @@ namespace ankett
 
             builder.Services.AddDbContext<ApplicationDbContext>(opts =>
             {
-                opts.UseSqlServer("SERVER=DESKTOP-VI5LI79;Database=Ankett;Trusted_Connection=True;TrustServerCertificate=True");
+            opts.UseSqlServer("SERVER=DESKTOP-VI5LI79;Database=Ankett;Trusted_Connection=True;TrustServerCertificate=True");
 
             });
 
