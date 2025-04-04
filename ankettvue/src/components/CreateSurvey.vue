@@ -81,7 +81,7 @@
 </script>
 <style>
   .btn {
-    width: 20;
+    width: %20;
     padding: 10px;
     background-color: #007bff;
     color: white;

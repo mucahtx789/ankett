@@ -18,7 +18,7 @@
             Detayları Gör
           </button>
 
-          <!-- Employee için anketi çözme butonu -->
+          <!-- Employee için anketi çözme butonu, yalnızca çözülmemiş anketler için -->
           <button v-if="userRole === 'Employee' && !completedSurveys.includes(survey.id)"
                   @click="takeSurvey(survey.id)">
             Çöz
@@ -46,11 +46,7 @@
         userId: localStorage.getItem('userId'), // Kullanıcının ID'si
       };
     },
-    mounted() {
-      console.log('User Role:', localStorage.getItem('userRole')); // userRole'u kontrol et
-      this.userRole = localStorage.getItem('userRole'); // localStorage'dan al
-      console.log('User Role in Data:', this.userRole); // Burada da kontrol edin
-    },
+    
     async created() {
       // Kullanıcı rolü doğrulandıktan sonra anketleri getir
       try {
@@ -59,7 +55,7 @@
 
         // Eğer kullanıcı Employee ise, çözülen anketleri kontrol et
         if (this.userRole === 'Employee') {
-          const completedResponse = await axios.get(`http://localhost:5295/api/answer/completed/${this.userId}`);
+          const completedResponse = await axios.get(`http://localhost:5295/api/survey/completed/${this.userId}`);
           this.completedSurveys = completedResponse.data;
         }
       } catch (error) {
@@ -85,23 +81,3 @@
     },
   };
 </script>
-
-<style scoped>
-  .container {
-    width: 80%;
-    margin: 0 auto;
-  }
-
-  button {
-    margin-left: 10px;
-  }
-
-  ul {
-    list-style-type: none;
-    padding: 0;
-  }
-
-  li {
-    margin: 15px 0;
-  }
-</style>

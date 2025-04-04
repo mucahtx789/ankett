@@ -1,54 +1,70 @@
 <template>
-  <div class="container">
-    <h2>{{ survey.title }}</h2>
-
+  <div>
+    <h1>{{ survey.title }}</h1>
     <div v-for="question in survey.questions" :key="question.id">
       <h3>{{ question.text }}</h3>
-      <div v-for="option in question.options" :key="option.id">
-        <input type="radio" :name="'question-' + question.id" :value="option.id" v-model="answers[question.id]" />
-        <label>{{ option.text }}</label>
-      </div>
+      <ul>
+        <li v-for="option in question.options" :key="option.id">
+          <label>
+            <input type="radio" :name="'q' + question.id" :value="option.id" v-model="answers[question.id]" />
+            {{ option.text }}
+          </label>
+        </li>
+      </ul>
     </div>
-
-    <button @click="submitAnswers">Cevapları Gönder</button>
+    <button @click="submitAnswers">Gönder</button>
   </div>
 </template>
 
 <script>
-import axios from "axios";
+  import axios from "axios";
 
-export default {
-  data() {
-    return {
-      survey: {},
-      answers: {},
-      userId: localStorage.getItem("userId"),
-    };
-  },
-  async created() {
+  export default {
+    data() {
+      return {
+        survey: {},
+        answers: {}, // Kullanıcının seçtiği cevaplar
+      };
+    },
+    methods: {
+       async fetchSurvey() {
     const surveyId = this.$route.params.id;
+    console.log("Gelen Survey ID:", surveyId); // Debug için
+
+    if (!surveyId || isNaN(surveyId)) {
+      console.error("Survey ID bulunamadı veya geçersiz:", surveyId);
+      alert("Hata: Geçersiz anket ID'si!");
+      this.$router.push('/survey-list'); // Ana sayfaya yönlendir
+      return;
+    }
+
     try {
-      const response = await axios.get(`http://localhost:5295/api/survey/${surveyId}`);
+      const response = await axios.get(`http://localhost:5295/api/answer/${surveyId}`);
       this.survey = response.data;
     } catch (error) {
       console.error("Anket yüklenemedi", error);
+      alert("Anket yüklenemedi!");
+      this.$router.push('/survey-list');
     }
-  },
-  methods: {
-    async submitAnswers() {
-      const formattedAnswers = Object.keys(this.answers).map((questionId) => ({
-        employeeId: this.userId,
-        optionId: this.answers[questionId],
-      }));
+      },
+      async submitAnswers() {
+        const payload = Object.entries(this.answers).map(([questionId, optionId]) => ({
+          questionId: parseInt(questionId),
+          optionId,
+          employeeId: 1, // TODO: Giriş yapan kullanıcıdan al
+        }));
 
-      try {
-        await axios.post("http://localhost:5295/api/answer/submit", formattedAnswers);
-        alert("Cevaplar başarıyla kaydedildi.");
-        this.$router.push("/survey-list");
-      } catch (error) {
-        console.error("Cevaplar kaydedilirken hata oluştu", error);
-      }
+        try {
+          await axios.post("http://localhost:5295/api/answer/submit", payload);
+          alert("Cevaplar başarıyla gönderildi!");
+          this.$router.push('/survey-list'); // anket sayfasına yönlendir
+        } catch (error) {
+          console.error("Cevaplar gönderilirken hata oluştu", error);
+        }
+      },
     },
-  },
-};
+    created() {
+      this.fetchSurvey();
+    },
+  };
 </script>

@@ -19,7 +19,7 @@ const router = createRouter({
     { path: '/survey-list', component: SurveyList },
     { path: '/survey-detail/:surveyId', component: SurveyDetail },
     { path: '/create-survey', component: CreateSurvey },
-    { path: '/take-survey/:surveyId', component: TakeSurvey },
+    { path: '/take-survey/:id', component: TakeSurvey },
   ],
 });
 
