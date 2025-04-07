@@ -48,10 +48,15 @@
     }
       },
       async submitAnswers() {
+        const userId = localStorage.getItem("userId"); // Giriş yapan kullanıcının ID'si
+        if (!userId) {
+          alert("Kullanıcı kimliği bulunamadı, lütfen tekrar giriş yapın!");
+          return;
+        }
         const payload = Object.entries(this.answers).map(([questionId, optionId]) => ({
           questionId: parseInt(questionId),
           optionId,
-          employeeId: 1, // TODO: Giriş yapan kullanıcıdan al
+          employeeId: parseInt(userId), // LocalStorage'dan gelen gerçek kullanıcı ID'si
         }));
 
         try {
