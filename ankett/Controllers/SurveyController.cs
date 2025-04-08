@@ -110,6 +110,41 @@ public class SurveyController : ControllerBase
 
         return Ok(completedSurveys);
     }
+
+    [HttpGet("details/{id}")]
+    public IActionResult GetSurveyDetails(int id)
+    {
+        var survey = _context.Surveys
+            .Include(s => s.Questions)
+                .ThenInclude(q => q.Options) // Seçenekleri dahil et
+            .FirstOrDefault(s => s.Id == id);
+
+        if (survey == null)
+        {
+            return NotFound(new { message = "Anket bulunamadı." });
+        }
+
+        var response = new
+        {
+            Id = survey.Id,
+            Title = survey.Title,
+            CreatedAt = survey.CreatedAt,
+            Questions = survey.Questions.Select(q => new
+            {
+                Id = q.Id,
+                Text = q.Text,
+                Options = q.Options.Select(o => new
+                {
+                    Id = o.Id,
+                    Text = o.Text,
+                    VoteCount = _context.Answers.Count(a => a.OptionId == o.Id) // Oyları hesapla
+                }).ToList()
+            }).ToList()
+        };
+
+        return Ok(response);
+    }
+
 }
 public class SurveyCreateRequest
 {

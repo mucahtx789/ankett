@@ -14,7 +14,7 @@ const router = createRouter({
     { path: '/login', component: Login },  // Login sayfası rotası
     { path: '/register', component: Register },
     { path: '/survey-list', component: SurveyList, meta: { requiresAuth: true } },
-    { path: '/survey-detail/:surveyId', component: SurveyDetail, meta: { requiresAdmin: true } },
+    { path: '/survey-detail/:id', component: SurveyDetail, meta: { requiresAdmin: true } },
     { path: '/create-survey', component: CreateSurvey, meta: { requiresAdmin: true } },
     { path: '/take-survey/:id', component: TakeSurvey, meta: { requiresAuth: true } },
   ],
