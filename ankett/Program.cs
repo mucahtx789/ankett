@@ -1,5 +1,5 @@
-
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace ankett
 {
@@ -9,29 +9,48 @@ namespace ankett
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddDbContext<ApplicationDbContext>(opts =>
+           
+            builder.WebHost.ConfigureKestrel(options =>
             {
-            opts.UseSqlServer("SERVER=DESKTOP-VI5LI79;Database=Ankett;Trusted_Connection=True;TrustServerCertificate=True");
-
+                options.ListenAnyIP(5295); // Vue frontend'in eriþeceði backend portu
             });
 
-            // Add services to the container.
+            /* // SQL Server baðlantýsý
+             builder.Services.AddDbContext<ApplicationDbContext>(opts =>
+             {
+
+                  opts.UseSqlServer("Server=DESKTOP-VI5LI79;Database=Ankett;User Id=sa;Password=123;Encrypt=False;TrustServerCertificate=True;");
+
+             });*/
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+            // DbContext'i servis olarak ekliyoruz
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
+
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // CORS ayarlarý 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll",
-                    policy => policy.AllowAnyOrigin()
-                                    .AllowAnyMethod()
-                                    .AllowAnyHeader());
+                options.AddPolicy("AllowVueApp", policy =>
+                {
+                    policy.WithOrigins("http://localhost:63020") //  Vue app adresi
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials(); //  (JWT, cookie vs.)
+                });
             });
+
             var app = builder.Build();
-            app.UseCors("AllowAll");
-            // Configure the HTTP request pipeline.
+
+            // CORS middleware’i mutlaka en üstte çalýþmalý
+            app.UseCors("AllowVueApp");
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -41,7 +60,6 @@ namespace ankett
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
