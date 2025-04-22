@@ -26,7 +26,7 @@
 
   </div>
   <div>
-    
+
   </div>
 </template>
 
@@ -45,16 +45,18 @@
         try {
           const response = await axios.post('http://localhost:5295/api/user/login', {
             username: this.username,
-            password: this.password,
+            password: this.password
           });
 
           console.log('Login successful', response.data);
 
           // Kullanıcı ID ve Role bilgisini sakla (localStorage veya Vuex kullanabilirsin)
           const role = response.data.role === 0 ? 'Admin' : 'Employee'; // 0 -> Admin, 1 -> Employee
+          const token = response.data.token;
+          localStorage.setItem('token', response.data.token);  // Token'ı localStorage'a kaydediyoruz
           localStorage.setItem('userId', response.data.id);
           localStorage.setItem('userRole', role);
-
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           // Kullanıcıyı anket sayfasına yönlendir
           this.$router.push('/survey-list');
 
@@ -110,6 +112,7 @@
     display: block;
     margin-bottom: 5px;
   }
+
   .reg {
     width: 25%;
     background-color: #04AA6D; /* Green */

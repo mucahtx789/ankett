@@ -6,6 +6,17 @@ import SurveyDetail from './components/SurveyDetail.vue';
 import CreateSurvey from './components/CreateSurvey.vue';
 import TakeSurvey from './components/TakeSurvey.vue';
 
+// Token doğrulama fonksiyonu
+function isTokenValid() {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+
+  // Token'ı decode et ve geçerliliğini kontrol et
+  const payload = JSON.parse(atob(token.split('.')[1])); // Token'ı decode et
+  const exp = payload.exp * 1000; // Expiry timestamp (milisaniye cinsinden)
+  return Date.now() < exp; // Geçerli mi?
+}
+
 // Vue Router'ı tanımlayın
 const router = createRouter({
   history: createWebHistory(),
@@ -24,10 +35,20 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem('userId');
   const userRole = localStorage.getItem('userRole');
+  const tokenValid = isTokenValid(); // Token doğrulama kontrolü
 
   // Eğer sayfa oturum gerektiriyorsa ve kullanıcı giriş yapmamışsa login sayfasına yönlendir
   if (to.meta.requiresAuth && !isAuthenticated) {
     alert('Bu sayfaya erişmek için giriş yapmalısınız!');
+    return next('/login');
+  }
+
+  // Eğer token geçerli değilse, kullanıcıyı login sayfasına yönlendir
+  if (to.meta.requiresAuth && !tokenValid) {
+    alert('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın!');
+    localStorage.removeItem('token'); // Geçersiz token'ı kaldır
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
     return next('/login');
   }
 

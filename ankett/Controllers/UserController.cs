@@ -1,6 +1,12 @@
 ﻿using ankett.Models;
+using ankett.Models.Dto;
+using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace ankett.Controllers
 {
@@ -9,10 +15,12 @@ namespace ankett.Controllers
     public class UserController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-
-        public UserController(ApplicationDbContext context)
+        private readonly IConfiguration _config;
+       
+        public UserController(ApplicationDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
@@ -40,7 +48,7 @@ namespace ankett.Controllers
                 return StatusCode(500, new { message = "An error occurred while saving to the database.", error = ex.Message });
             }
         }
-            [HttpPost("login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var user = await _context.Users
@@ -49,19 +57,36 @@ namespace ankett.Controllers
             if (user == null || user.PasswordHash != loginDto.Password)
                 return Unauthorized();
 
-            return Ok(new { user.Id, user.Role });
+            var token = GenerateJwtToken(user.Id, user.Role == 0 ? "Admin" : "Employee");
+            return Ok(new { user.Id, user.Role, token });
         }
-    }
-        public class RegisterDto
+        // JWT Token oluşturma işlemi
+        private string GenerateJwtToken(int userId, string role)
         {
-            public string Username { get; set; }
-            public string Password { get; set; }
-            public UserRole Role { get; set; }
-        }
 
-        public class LoginDto
-    {
-        public string Username { get; set; }
-        public string Password { get; set; }
+            var jwtKey = _config["Jwt:Key"];
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new ArgumentNullException("Jwt:Key", "JWT Anahtarı 'Jwt:Key' yapılandırma dosyasından alınamıyor.");
+            }
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var token = new JwtSecurityToken(
+                _config["Jwt:Issuer"],
+                _config["Jwt:Audience"],
+                claims,
+                expires: DateTime.UtcNow.AddHours(2),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
     }
 }
