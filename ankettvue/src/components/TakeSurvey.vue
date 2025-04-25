@@ -12,7 +12,7 @@
         </li>
       </ul>
     </div>
-    <button @click="submitAnswers">Gönder</button>
+    <button @click="submitAnswers">Submit</button>
   </div>
 </template>
 
@@ -23,48 +23,50 @@
     data() {
       return {
         survey: {},
-        answers: {}, // Kullanıcının seçtiği cevaplar
+        answers: {}, // kullanıcın seçtiği cevaplar
       };
     },
     methods: {
-       async fetchSurvey() {
-    const surveyId = this.$route.params.id;
-    console.log("Gelen Survey ID:", surveyId); // Debug için
+      async fetchSurvey() {
+        const surveyId = this.$route.params.id;
+        console.log("Survey ID:", surveyId); // 
 
-    if (!surveyId || isNaN(surveyId)) {
-      console.error("Survey ID bulunamadı veya geçersiz:", surveyId);
-      alert("Hata: Geçersiz anket ID'si!");
-      this.$router.push('/survey-list'); // Ana sayfaya yönlendir
-      return;
-    }
-
-    try {
-      const response = await axios.get(`http://localhost:5295/api/answer/${surveyId}`);
-      this.survey = response.data;
-    } catch (error) {
-      console.error("Anket yüklenemedi", error);
-      alert("Anket yüklenemedi!");
-      this.$router.push('/survey-list');
-    }
-      },
-      async submitAnswers() {
-        const userId = localStorage.getItem("userId"); // Giriş yapan kullanıcının ID'si
-        if (!userId) {
-          alert("Kullanıcı kimliği bulunamadı, lütfen tekrar giriş yapın!");
+        if (!surveyId || isNaN(surveyId)) {
+          console.error("Survey ID not found or invalid:", surveyId);
+          alert("Error: Invalid survey ID!");
+          this.$router.push('/survey-list'); // 
           return;
         }
+
+        try {
+          const response = await axios.get(`http://localhost:5295/api/answer/${surveyId}`);
+          this.survey = response.data;
+        } catch (error) {
+          console.error("Survey could not be loaded", error);
+          alert("Error: Survey could not be loaded!");
+          this.$router.push('/survey-list'); // 
+        }
+      },
+      async submitAnswers() {
+        const userId = localStorage.getItem("userId"); // Giriş yapmış kullanıcının kimliği
+        if (!userId) {
+          alert("Error: User ID not found, please log in again!");
+          return;
+        }
+
         const payload = Object.entries(this.answers).map(([questionId, optionId]) => ({
           questionId: parseInt(questionId),
           optionId,
-          employeeId: parseInt(userId), // LocalStorage'dan gelen gerçek kullanıcı ID'si
+          employeeId: parseInt(userId), // localStorage'dan gerçek kullanıcı kimliği
         }));
 
         try {
           await axios.post("http://localhost:5295/api/answer/submit", payload);
-          alert("Cevaplar başarıyla gönderildi!");
-          this.$router.push('/survey-list'); // anket sayfasına yönlendir
+          alert("Success: Replies sent successfully!");
+          this.$router.push('/survey-list'); // 
         } catch (error) {
-          console.error("Cevaplar gönderilirken hata oluştu", error);
+          console.error("Error occurred while sending answers", error);
+          alert("Error: There was an issue submitting your answers!");
         }
       },
     },

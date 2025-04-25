@@ -27,7 +27,7 @@ namespace ankett.Controllers
         {
             if (await _context.Users.AnyAsync(u => u.Username == registerDto.Username))
             {
-                return BadRequest(new { message = "Username already exists!" });
+                return BadRequest(new { Success = false, message = "Username is used." });
             }
 
             var user = new User
@@ -41,11 +41,11 @@ namespace ankett.Controllers
             {
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
-                return Ok(new { message = "User registered successfully!" });
+                return Ok(new { Success = true, message = "User registration successful!" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while saving to the database.", error = ex.Message });
+                return StatusCode(500, new { Success = false, message = "An error occurred while saving the database.", error = ex.Message });
             }
         }
         [HttpPost("login")]
@@ -55,7 +55,7 @@ namespace ankett.Controllers
                 .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
 
             if (user == null || user.PasswordHash != loginDto.Password)
-                return Unauthorized();
+                return Unauthorized(new { message = "Invalid username or password." });
 
             var token = GenerateJwtToken(user.Id, user.Role == 0 ? "Admin" : "Employee");
             return Ok(new { user.Id, user.Role, token });

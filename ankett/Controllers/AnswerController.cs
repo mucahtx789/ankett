@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using ankett.Models.Dto;
 namespace ankett.Controllers
 {
     [ApiController]
@@ -26,7 +26,7 @@ namespace ankett.Controllers
             }
             if (answers == null || !answers.Any())
             {
-                return BadRequest("Cevaplar boş olamaz.");
+                return BadRequest(new { Success = false, Message = "Answers cannot be empty." });
             }
 
             foreach (var answer in answers)
@@ -41,7 +41,7 @@ namespace ankett.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return Ok(new { Message = "Cevaplar başarıyla kaydedildi." });
+            return Ok(new { Success = true, Message = "Answers saved successfully." });
         }
 
         [HttpGet("{id}")]
@@ -68,17 +68,11 @@ namespace ankett.Controllers
 
             if (survey == null)
             {
-                return NotFound("Anket bulunamadı.");
+                throw new KeyNotFoundException("No survey found.");
             }
 
             return Ok(survey);
         }
-    }
-
-    public class AnswerSubmitRequest
-    {
-        public int EmployeeId { get; set; }
-        public int OptionId { get; set; }
     }
 
 

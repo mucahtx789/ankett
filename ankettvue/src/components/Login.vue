@@ -24,9 +24,7 @@
       <button @click="$router.push('/register')" class="reg">Kayıt Ol</button>
     </form>
 
-  </div>
-  <div>
-
+    <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
   </div>
 </template>
 
@@ -38,10 +36,12 @@
       return {
         username: '',
         password: '',
+        errorMessage: '' // Hata mesajını buraya ekleyeceğiz
       };
     },
     methods: {
       async handleSubmit() {
+        this.errorMessage = ''; // Önceki hatayı temizleyelim
         try {
           const response = await axios.post('http://localhost:5295/api/user/login', {
             username: this.username,
@@ -53,7 +53,7 @@
           // Kullanıcı ID ve Role bilgisini sakla (localStorage veya Vuex kullanabilirsin)
           const role = response.data.role === 0 ? 'Admin' : 'Employee'; // 0 -> Admin, 1 -> Employee
           const token = response.data.token;
-          localStorage.setItem('token', response.data.token);  // Token'ı localStorage'a kaydediyoruz
+          localStorage.setItem('token', token);  // Token'ı localStorage'a kaydediyoruz
           localStorage.setItem('userId', response.data.id);
           localStorage.setItem('userRole', role);
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -61,11 +61,24 @@
           this.$router.push('/survey-list');
 
         } catch (error) {
-          console.error('Login failed', error.response?.data || error.message);
-          alert(error.response?.data?.message || 'Login failed. Please check your credentials.');
+          // Hata durumunda gelen mesajı kontrol et
+          if (error.response) {
+            // Eğer 401 hatası alırsak, kullanıcı adı veya şifre hatalı demek
+            const errorMessage = error.response.data?.message || 'Login failed. Please check your credentials.';
+            this.errorMessage = errorMessage; // Hata mesajını Vue bileşeninde göster
+            console.error('Login failed', errorMessage);
+          } else if (error.request) {
+            // Sunucuya yapılan istek başarılı ancak yanıt alınamamışsa
+            this.errorMessage = 'Server not responding. Please try again later.';
+            console.error('Server not responding:', error.request);
+          } else {
+            // Diğer hata türleri
+            this.errorMessage = 'An error occurred. Please try again.';
+            console.error('Error', error.message);
+          }
         }
-      },
-    },
+      }
+    }
   };
 </script>
 
@@ -122,5 +135,11 @@
 
   button:hover {
     background-color: #ffd800;
+  }
+
+  .error-message {
+    color: red;
+    text-align: center;
+    margin-top: 10px;
   }
 </style>

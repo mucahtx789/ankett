@@ -1,35 +1,37 @@
 <template>
   <div class="create-survey-container">
-    <h2>Yeni Anket Oluştur</h2>
+    <h2>Create New Survey</h2>
 
-    <!-- Anket Başlığı -->
+    <!-- Survey Title -->
     <div class="form-group">
-      <label for="title">Anket Başlığı</label>
-      <input v-model="title" id="title" placeholder="Anket Başlığı" class="input-field" />
+      <label for="title">Survey Title</label>
+      <input v-model="title" id="title" placeholder="Survey Title" class="input-field" />
+      <div v-if="errors.title" class="error-message">{{ errors.title }}</div>
     </div>
 
-    <!-- Sorular ve Cevaplar -->
+    <!-- Questions and Options -->
     <div v-for="(question, index) in questions" :key="index" class="question-group">
       <div class="form-group">
-        <label :for="'question' + index">Soru {{ index + 1 }}</label>
-        <input v-model="question.text" :id="'question' + index" placeholder="Soru metni" class="input-field" />
-        <button @click="removeQuestion(index)" class="remove-btn">Sil</button>
+        <label :for="'question' + index">Question {{ index + 1 }}</label>
+        <input v-model="question.text" :id="'question' + index" placeholder="Question text" class="input-field" />
+        <button @click="removeQuestion(index)" class="remove-btn">Remove</button>
+        <div v-if="errors[`question${index}`]" class="error-message">{{ errors[`question${index}`] }}</div>
       </div>
 
       <div v-for="(option, optIndex) in question.options" :key="optIndex" class="option-group">
         <div class="form-group">
-          <label :for="'option' + optIndex">Seçenek {{ optIndex + 1 }}</label>
-          <input v-model="option.text" :id="'option' + optIndex" placeholder="Seçenek metni" class="input-field" />
-          <button @click="removeOption(index, optIndex)" class="remove-btn">Sil</button>
+          <label :for="'option' + optIndex">Option {{ optIndex + 1 }}</label>
+          <input v-model="option.text" :id="'option' + optIndex" placeholder="Option text" class="input-field" />
+          <button @click="removeOption(index, optIndex)" class="remove-btn">Remove</button>
+          <div v-if="errors[`option${index}-${optIndex}`]" class="error-message">{{ errors[`option${index}-${optIndex}`] }}</div>
         </div>
       </div>
 
-      <button @click="addOption(index)" class="add-option-btn">+ Seçenek Ekle</button>
+      <button @click="addOption(index)" class="add-option-btn">+ Add Option</button>
     </div>
 
-    <button @click="addQuestion" class="add-question-btn">+ Soru Ekle</button>
-    <button @click="createSurvey" class="submit-btn">Anketi Kaydet</button>
-
+    <button @click="addQuestion" class="add-question-btn">+ Add Question</button>
+    <button @click="createSurvey" class="submit-btn">Save Survey</button>
   </div>
 </template>
 
@@ -41,13 +43,12 @@
       return {
         title: "",
         questions: [],
+        errors: {}, // To store error messages
       };
     },
     methods: {
       addQuestion() {
         this.questions.push({ text: "", options: [{ text: "" }] });
-
-        // Sayfa en alta kaydırma işlemi
         this.scrollToBottom();
       },
       removeQuestion(index) {
@@ -55,44 +56,71 @@
       },
       addOption(questionIndex) {
         this.questions[questionIndex].options.push({ text: "" });
-
-        // Sayfa en alta kaydırma işlemi
         this.scrollToBottom();
       },
       removeOption(questionIndex, optionIndex) {
         this.questions[questionIndex].options.splice(optionIndex, 1);
       },
+      validateSurvey() {
+        let isValid = true;
+        this.errors = {}; // Reset errors
+
+        if (!this.title.trim()) {
+          this.errors.title = "Survey title is required.";
+          isValid = false;
+        }
+
+        this.questions.forEach((question, index) => {
+          if (!question.text.trim()) {
+            this.errors[`question${index}`] = `Question ${index + 1} is required.`;
+            isValid = false;
+          }
+          question.options.forEach((option, optIndex) => {
+            if (!option.text.trim()) {
+              this.errors[`option${index}-${optIndex}`] = `Option ${optIndex + 1} for Question ${index + 1} is required.`;
+              isValid = false;
+            }
+          });
+        });
+
+        return isValid;
+      },
       async createSurvey() {
+        if (!this.validateSurvey()) {
+          return;
+        }
+
         const requestBody = {
           title: this.title,
           questions: this.questions.map(question => ({
             text: question.text,
             options: question.options.map(option => ({
-              text: option.text
-            }))
-          }))
+              text: option.text,
+            })),
+          })),
         };
 
-        console.log('Gönderilen veri:', JSON.stringify(requestBody));
+        console.log('Sent data:', JSON.stringify(requestBody));
 
         try {
           const response = await axios.post("http://localhost:5295/api/survey/create", requestBody);
-          alert("Anket başarıyla oluşturuldu.");
+          this.$message.success('The survey was created successfully.');
           this.$router.push("/survey-list");
         } catch (error) {
-          console.error("Anket oluşturma hatası:", error);
-          alert("Anket oluşturulamadı.");
+          if (error.response && error.response.data && error.response.data.Message) {
+            this.$message.error(error.response.data.Message);
+          } else {
+            this.$message.error('Could not create survey. Please try again.');
+          }
         }
       },
-
-      // Sayfayı en alta kaydırma fonksiyonu
       scrollToBottom() {
         this.$nextTick(() => {
           const container = document.querySelector('.create-survey-container');
           container.scrollTop = container.scrollHeight;
         });
-      }
-    }
+      },
+    },
   };
 </script>
 
@@ -106,8 +134,8 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     font-family: 'Arial', sans-serif;
     color: #333;
-    overflow-y: auto; /* Sayfa kaydırma yapılabilmesi için */
-    height: 80vh; /* Sayfa yüksekliği */
+    overflow-y: auto;
+    height: 80vh;
   }
 
   h2 {
@@ -169,30 +197,11 @@
     outline: none;
   }
 
-  /* Anketler Butonu */
-  .btn {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 20px;
+  .error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
   }
-
-    .btn:hover {
-      background-color: #6a11cb;
-    }
-
-  .add-option-btn, .add-question-btn {
-    background-color: #28a745;
-    width: 100%;
-  }
-
-    .add-option-btn:hover, .add-question-btn:hover {
-      background-color: #218838;
-    }
 
   /* Responsive Design */
   @media (max-width: 768px) {

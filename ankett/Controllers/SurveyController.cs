@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using ankett.Models.Dto;
 [Route("api/survey")]
 [ApiController]
 public class SurveyController : ControllerBase
@@ -22,9 +22,7 @@ public class SurveyController : ControllerBase
     public async Task<IActionResult> CreateSurvey([FromBody] SurveyCreateRequest request)
     {
         if (request == null || string.IsNullOrEmpty(request.Title) || !request.Questions.Any())
-        {
-            return BadRequest("Geçersiz anket verisi.");
-        }
+            throw new ArgumentException("Invalid survey data."); // ❗ Global hata yakalayıcıya gider
 
         var survey = new Survey
         {
@@ -59,7 +57,7 @@ public class SurveyController : ControllerBase
             }
         }
 
-        return Ok(new { Message = "Anket başarıyla oluşturuldu." });
+        return Ok(new { Success = true, Message = "The survey was created successfully." });
     }
 
 
@@ -92,7 +90,7 @@ public class SurveyController : ControllerBase
 
         if (survey == null)
         {
-            return NotFound("Anket bulunamadı.");
+            throw new KeyNotFoundException("No survey found.");
         }
 
         return Ok(survey);
@@ -121,7 +119,7 @@ public class SurveyController : ControllerBase
 
         if (survey == null)
         {
-            return NotFound(new { message = "Anket bulunamadı." });
+            throw new KeyNotFoundException("No survey found.");
         }
 
         var response = new
@@ -145,20 +143,4 @@ public class SurveyController : ControllerBase
         return Ok(response);
     }
 
-}
-public class SurveyCreateRequest
-{
-    public string Title { get; set; }
-    public List<QuestionCreateRequest> Questions { get; set; }
-}
-
-public class QuestionCreateRequest
-{
-    public string Text { get; set; }
-    public List<OptionCreateRequest> Options { get; set; }
-}
-
-public class OptionCreateRequest
-{
-    public string Text { get; set; }
 }

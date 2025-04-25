@@ -1,15 +1,16 @@
 <template>
   <div class="container">
-
     <h2 class="title">{{ survey.title }}</h2>
     <p class="date">🗓 Oluşturulma Tarihi: {{ formatDate(survey.createdAt) }}</p>
+
+    <!-- Hata mesajı gösterimi -->
+    <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
     <div v-for="(question, index) in survey.questions" :key="question.id" class="question-card">
       <h3>{{ question.text }}</h3>
       <canvas :id="'chart-' + index"></canvas>
     </div>
   </div>
-
 </template>
 
 <script>
@@ -23,7 +24,8 @@
           title: "",
           createdAt: "",
           questions: []
-        }
+        },
+        errorMessage: ''  // Hata mesajını tutacak alan
       };
     },
     async created() {
@@ -37,7 +39,7 @@
         const surveyId = this.$route.params.id;
 
         if (!surveyId) {
-          console.error("Hata: Anket ID alınamadı.");
+          this.errorMessage = "Survey ID could not be obtained.";
           return;
         }
 
@@ -45,7 +47,15 @@
           const response = await axios.get(`http://localhost:5295/api/survey/details/${surveyId}`);
           this.survey = response.data;
         } catch (error) {
-          console.error("Anket verileri alınamadı:", error);
+          // Hata durumunda errorMessage'yi güncelle
+          if (error.response) {
+            this.errorMessage = error.response.data?.message || "Survey data could not be obtained.";
+          } else if (error.request) {
+            this.errorMessage = "Failed to connect to server. Please try again..";
+          } else {
+            this.errorMessage = "An unknown error occurred.";
+          }
+          console.error("Survey data could not be obtained:", error);
         }
       },
       renderCharts() {
@@ -105,5 +115,12 @@
     margin-top: 20px;
     border-radius: 10px;
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Hata mesajı stili */
+  .error-message {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
   }
 </style>

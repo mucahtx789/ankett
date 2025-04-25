@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -74,6 +75,8 @@ namespace ankett
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            // Middleware
+            app.UseMiddleware<ExceptionMiddleware>();
 
             // HTTPS yönlendirmesi
             app.UseHttpsRedirection();

@@ -1,34 +1,34 @@
 <template>
   <div class="container">
-    <h1 class="title">📋 Anket Listesi</h1>
+    <h1 class="title">📋 Survey List</h1>
 
-    <!-- Admin için anket oluşturma butonu -->
+    <!-- Button to create a new survey for Admin -->
     <div v-if="userRole === 'Admin'" class="btn-container">
-      <button class="create-btn" @click="$router.push('/create-survey')">➕ Yeni Anket Oluştur</button>
+      <button class="create-btn" @click="$router.push('/create-survey')">➕ Create New Survey</button>
     </div>
 
-    <!-- Anketler listeleniyor -->
+    <!-- List of surveys -->
     <div class="survey-list">
       <div v-for="survey in surveys" :key="survey.id" class="survey-card">
         <h3>{{ survey.title }}</h3>
         <p class="date">🗓 {{ formatDate(survey.createdAt) }}</p>
 
         <div class="actions">
-          <!-- Admin için anket detaylarına gitme butonu -->
+          <!-- Button to go to survey details for Admin -->
           <button v-if="userRole === 'Admin'" class="detail-btn" @click="goToSurveyDetail(survey.id)">
-            📊 Detayları Gör
+            📊 View Details
           </button>
 
-          <!-- Employee için anketi çözme butonu -->
+          <!-- Button to take survey for Employee -->
           <button v-if="userRole === 'Employee' && !completedSurveys.includes(survey.id)"
                   class="solve-btn"
                   @click="takeSurvey(survey.id)">
-            ✅ Çöz
+            ✅ Take Survey
           </button>
 
-          <!-- Employee için anketi çözüp çözülemediğini kontrol et -->
+          <!-- Badge for Employee indicating the survey is completed -->
           <span v-if="userRole === 'Employee' && completedSurveys.includes(survey.id)" class="completed-badge">
-            ✔ Çözüldü
+            ✔ Completed
           </span>
         </div>
       </div>
@@ -59,7 +59,7 @@
           this.completedSurveys = completedResponse.data;
         }
       } catch (error) {
-        console.error("Anketler alınırken hata oluştu", error);
+        console.error("Error occurred while fetching surveys", error); // Error message in English
       }
     },
 
@@ -71,14 +71,14 @@
         this.$router.push(`/take-survey/${surveyId}`);
       },
       formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString("tr-TR");
+        return new Date(dateString).toLocaleDateString("en-US");
       },
     },
   };
 </script>
 
 <style scoped>
-  /* Sayfa genel stil */
+  /* General styling for the page */
   .container {
     max-width: 800px;
     margin: auto;
@@ -92,7 +92,7 @@
     margin-bottom: 20px;
   }
 
-  /* Yeni Anket Oluştur Butonu */
+  /* Button for creating a new survey */
   .btn-container {
     text-align: right;
     margin-bottom: 15px;
@@ -113,7 +113,7 @@
       background-color: #45a049;
     }
 
-  /* Anket Kartları */
+  /* Survey Cards */
   .survey-list {
     display: flex;
     flex-direction: column;
@@ -135,14 +135,14 @@
       transform: scale(1.02);
     }
 
-  /* Tarih Stili */
+  /* Date styling */
   .date {
     font-size: 14px;
     color: #777;
     margin-bottom: 10px;
   }
 
-  /* Butonlar */
+  /* Buttons */
   .actions {
     display: flex;
     gap: 10px;
@@ -175,7 +175,7 @@
       background-color: #e67e22;
     }
 
-  /* Çözülen Anket Rozeti */
+  /* Completed survey badge */
   .completed-badge {
     background-color: #2ecc71;
     color: white;
