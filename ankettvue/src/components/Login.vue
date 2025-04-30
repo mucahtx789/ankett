@@ -138,7 +138,7 @@
   }
 
   .error-message {
-    color: red;
+    
     text-align: center;
     margin-top: 10px;
   }

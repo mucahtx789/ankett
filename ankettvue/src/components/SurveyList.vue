@@ -2,31 +2,31 @@
   <div class="container">
     <h1 class="title">📋 Survey List</h1>
 
-    <!-- Button to create a new survey for Admin -->
+    
     <div v-if="userRole === 'Admin'" class="btn-container">
       <button class="create-btn" @click="$router.push('/create-survey')">➕ Create New Survey</button>
     </div>
 
-    <!-- List of surveys -->
+   
     <div class="survey-list">
       <div v-for="survey in surveys" :key="survey.id" class="survey-card">
         <h3>{{ survey.title }}</h3>
         <p class="date">🗓 {{ formatDate(survey.createdAt) }}</p>
 
         <div class="actions">
-          <!-- Button to go to survey details for Admin -->
+    
           <button v-if="userRole === 'Admin'" class="detail-btn" @click="goToSurveyDetail(survey.id)">
             📊 View Details
           </button>
 
-          <!-- Button to take survey for Employee -->
+        
           <button v-if="userRole === 'Employee' && !completedSurveys.includes(survey.id)"
                   class="solve-btn"
                   @click="takeSurvey(survey.id)">
             ✅ Take Survey
           </button>
 
-          <!-- Badge for Employee indicating the survey is completed -->
+        
           <span v-if="userRole === 'Employee' && completedSurveys.includes(survey.id)" class="completed-badge">
             ✔ Completed
           </span>
@@ -59,7 +59,7 @@
           this.completedSurveys = completedResponse.data;
         }
       } catch (error) {
-        console.error("Error occurred while fetching surveys", error); // Error message in English
+        //console.error("Error occurred while fetching surveys", error);
       }
     },
 

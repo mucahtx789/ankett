@@ -2,23 +2,29 @@
   <div id="app">
     <!-- Üst Kısımda Oturum Açıldıktan Sonra Görünecek Menü -->
     <div v-if="isLoggedIn" class="navbar">
+      
       <button class="survey-btn" @click="goToSurveyList">Anket Listesi</button>
       <button class="logout-btn" @click="logout">Çıkış Yap</button>
     </div>
 
     <!-- Sayfa İçeriği -->
     <router-view></router-view> <!-- Sayfa içeriği burada render edilir -->
+    
   </div>
 </template>
 
 <script>
+
   export default {
+   
     data() {
       return {
         isLoggedIn: false, // Giriş durumu
       };
     },
     created() {
+     
+
       this.checkLoginStatus(); // Sayfa ilk yüklendiğinde giriş durumu kontrol edilir
     },
     mounted() {
@@ -48,20 +54,22 @@
 
         // Çıkış sonrası, buton görünümünü güncelle
         this.isLoggedIn = false;
-      }
+      },
+
+      
     }
   };
 </script>
 
-<style >
+<style>
   body {
     background: url('https://wallpapers.com/images/featured/colorful-abstract-background-rra8u4adw1ubypzl.jpg') repeat;
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-
     height: 100vh;
   }
+
   /* Üst Menü (Navbar) */
   .navbar {
     position: fixed;
@@ -99,8 +107,18 @@
   #app {
     padding-top: 80px; /* Navbar'ın üst kısmını boş bırak */
   }
+
   button:hover {
     background-color: #ffd800;
   }
+  .error-message {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    background-color: red;
+    color: white;
+    border-radius: 5px;
+  }
 </style>
-

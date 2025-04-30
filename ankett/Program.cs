@@ -1,4 +1,5 @@
 
+using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -44,6 +45,7 @@ namespace ankett
                           .AllowCredentials(); // JWT, cookie vs. izin ver
                 });
             });
+            
 
             // JWT Authentication yapýlandýrmasý
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -65,7 +67,22 @@ namespace ankett
             // Authorization yapýlandýrmasý
             builder.Services.AddAuthorization();
 
+            // MemoryCache ve Rate Limiting servisleri  API Rate Limiting (API Ýstek Sýnýrlamasý)
+            builder.Services.AddMemoryCache();
+            builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+            builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+
+
             var app = builder.Build();
+
+            app.UseCors("AllowVueApp");
+
+
+            // Rate Limiting middleware'i ekle
+            app.UseIpRateLimiting();
 
             // CORS middleware’i mutlaka en üstte çalýþmalý
             app.UseCors("AllowVueApp");
