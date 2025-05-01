@@ -2,31 +2,31 @@
   <div class="container">
     <h1 class="title">📋 Survey List</h1>
 
-    
+    <!-- Error Alert -->
+    <div v-if="rateLimitError" class="error-message">
+      ⚠️ Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.
+    </div>
+
     <div v-if="userRole === 'Admin'" class="btn-container">
       <button class="create-btn" @click="$router.push('/create-survey')">➕ Create New Survey</button>
     </div>
 
-   
     <div class="survey-list">
       <div v-for="survey in surveys" :key="survey.id" class="survey-card">
         <h3>{{ survey.title }}</h3>
         <p class="date">🗓 {{ formatDate(survey.createdAt) }}</p>
 
         <div class="actions">
-    
           <button v-if="userRole === 'Admin'" class="detail-btn" @click="goToSurveyDetail(survey.id)">
             📊 View Details
           </button>
 
-        
           <button v-if="userRole === 'Employee' && !completedSurveys.includes(survey.id)"
                   class="solve-btn"
                   @click="takeSurvey(survey.id)">
             ✅ Take Survey
           </button>
 
-        
           <span v-if="userRole === 'Employee' && completedSurveys.includes(survey.id)" class="completed-badge">
             ✔ Completed
           </span>
@@ -46,6 +46,7 @@
         completedSurveys: [],
         userRole: localStorage.getItem("userRole"),
         userId: localStorage.getItem("userId"),
+       rateLimitError: false, //api rate limit
       };
     },
 
@@ -58,8 +59,10 @@
           const completedResponse = await axios.get(`http://localhost:5295/api/survey/completed/${this.userId}`);
           this.completedSurveys = completedResponse.data;
         }
-      } catch (error) {
-        //console.error("Error occurred while fetching surveys", error);
+      } catch (error) {//api rate limit
+        if (error.response && error.response.status === 429) {
+        //  this.rateLimitError = true;
+        }
       }
     },
 
@@ -78,7 +81,6 @@
 </script>
 
 <style scoped>
-  /* General styling for the page */
   .container {
     max-width: 800px;
     margin: auto;
@@ -92,6 +94,16 @@
     margin-bottom: 20px;
   }
 
+  /* Error message style */
+  .error-message {
+    background-color: #ffcccc;
+    color: #a94442;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: bold;
+  }
+
   /* Button for creating a new survey */
   .btn-container {
     text-align: right;
@@ -99,7 +111,7 @@
   }
 
   .create-btn {
-    background-color: #4CAF50;
+    background-color: #4caf50;
     color: white;
     padding: 10px 15px;
     border: none;
@@ -135,20 +147,19 @@
       transform: scale(1.02);
     }
 
-  /* Date styling */
   .date {
     font-size: 14px;
     color: #777;
     margin-bottom: 10px;
   }
 
-  /* Buttons */
   .actions {
     display: flex;
     gap: 10px;
   }
 
-  .detail-btn, .solve-btn {
+  .detail-btn,
+  .solve-btn {
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 14px;
@@ -175,7 +186,6 @@
       background-color: #e67e22;
     }
 
-  /* Completed survey badge */
   .completed-badge {
     background-color: #2ecc71;
     color: white;

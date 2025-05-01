@@ -1,8 +1,7 @@
 <template>
   <div id="app">
     <!-- Üst Kısımda Oturum Açıldıktan Sonra Görünecek Menü -->
-    <div v-if="isLoggedIn" class="navbar">
-      
+    
       <button class="survey-btn" @click="goToSurveyList">Anket Listesi</button>
       <button class="logout-btn" @click="logout">Çıkış Yap</button>
     </div>
@@ -26,6 +25,7 @@
      
 
       this.checkLoginStatus(); // Sayfa ilk yüklendiğinde giriş durumu kontrol edilir
+     
     },
     mounted() {
       // Vue Router'ın geçişlerini dinle
