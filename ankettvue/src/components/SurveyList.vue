@@ -61,7 +61,7 @@
         }
       } catch (error) {//api rate limit
         if (error.response && error.response.status === 429) {
-        //  this.rateLimitError = true;
+          this.rateLimitError = true;
         }
       }
     },

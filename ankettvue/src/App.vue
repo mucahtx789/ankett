@@ -1,14 +1,14 @@
 <template>
   <div id="app">
     <!-- Üst Kısımda Oturum Açıldıktan Sonra Görünecek Menü -->
-    
+    <div v-if="isLoggedIn" class="navbar">
       <button class="survey-btn" @click="goToSurveyList">Anket Listesi</button>
       <button class="logout-btn" @click="logout">Çıkış Yap</button>
     </div>
 
     <!-- Sayfa İçeriği -->
     <router-view></router-view> <!-- Sayfa içeriği burada render edilir -->
-    
+
   </div>
 </template>
 
