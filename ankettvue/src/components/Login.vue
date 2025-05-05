@@ -4,24 +4,26 @@
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
         <label for="username">Username:</label>
-        <input type="text"
-               id="username"
-               v-model="username"
-               placeholder="Enter your username"
-               required />
+        <input type="text" id="username" v-model="username" required />
       </div>
 
       <div class="form-group">
         <label for="password">Password:</label>
-        <input type="password"
-               id="password"
-               v-model="password"
-               placeholder="Enter your password"
-               required />
+        <input type="password" id="password" v-model="password" required />
       </div>
 
-      <button type="submit">Login</button>
-      <button @click="$router.push('/register')" class="reg">Kayıt Ol</button>
+      <!-- vue3-recaptcha2 -->
+      <div class="form-group">
+        <vue-recaptcha ref="recaptcha"
+                       :sitekey="siteKey"
+                       @verify="onCaptchaResolved"
+                       @expire="onCaptchaExpired"
+                       @fail="onCaptchaError"
+                       @error="onCaptchaError" />
+      </div>
+
+      <button type="submit" :disabled="!captchaToken">Login</button>
+      <button type="button" @click="$router.push('/register')" class="reg">Kayıt Ol</button>
     </form>
 
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -29,53 +31,58 @@
 </template>
 
 <script>
-  import axios from 'axios';
+  import axios from 'axios'; // Axios importu doğru şekilde yapıldı
 
   export default {
     data() {
       return {
         username: '',
         password: '',
-        errorMessage: '' // Hata mesajını buraya ekleyeceğiz
+        captchaToken: '',
+        errorMessage: '',
+        siteKey: '6LcI-i4rAAAAAC31kisMVX4-8yiKEQ3KQV29oW6Q' // siteKey burada
       };
     },
     methods: {
+      // reCAPTCHA doğrulama işlemi
+      onCaptchaResolved(token) {
+        this.captchaToken = token;
+      },
+      onCaptchaExpired() {
+        this.captchaToken = ''; // Token süresi bittiğinde temizlenir
+      },
+      onCaptchaError() {
+        this.errorMessage = 'reCAPTCHA doğrulaması başarısız oldu.'; // Eğer hata oluşursa kullanıcıya hata mesajı verilir
+        this.captchaToken = ''; // Token temizlenir
+      },
       async handleSubmit() {
-        this.errorMessage = ''; // Önceki hatayı temizleyelim
+        if (!this.captchaToken) {
+          this.errorMessage = 'Lütfen reCAPTCHA doğrulamasını tamamlayın.'; // Captcha tamamlanmadıysa hata verir
+          return;
+        }
+
         try {
           const response = await axios.post('http://localhost:5295/api/user/login', {
             username: this.username,
-            password: this.password
+            password: this.password,
+            RecaptchaToken: this.captchaToken // CAPTCHA token'ı burada gönderilebilir
           });
 
-          console.log('Login successful', response.data);
+          const role = response.data.role === 0 ? 'Admin' : 'Employee'; // Role'ü belirle
+          const token = response.data.token; // Kullanıcı token'ı
+          localStorage.setItem('token', token);  // Token'ı localStorage'a kaydet
+          localStorage.setItem('userId', response.data.id); // Kullanıcı ID'sini kaydet
+          localStorage.setItem('userRole', role); // Kullanıcı rolünü kaydet
 
-          // Kullanıcı ID ve Role bilgisini sakla (localStorage veya Vuex kullanabilirsin)
-          const role = response.data.role === 0 ? 'Admin' : 'Employee'; // 0 -> Admin, 1 -> Employee
-          const token = response.data.token;
-          localStorage.setItem('token', token);  // Token'ı localStorage'a kaydediyoruz
-          localStorage.setItem('userId', response.data.id);
-          localStorage.setItem('userRole', role);
+          // Authorization header'ını ayarla
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          // Kullanıcıyı anket sayfasına yönlendir
+
+          // Anket sayfasına yönlendir
           this.$router.push('/survey-list');
 
         } catch (error) {
-          // Hata durumunda gelen mesajı kontrol et
-          if (error.response) {
-            // Eğer 401 hatası alırsak, kullanıcı adı veya şifre hatalı demek
-            const errorMessage = error.response.data?.message || 'Login failed. Please check your credentials.';
-            this.errorMessage = errorMessage; // Hata mesajını Vue bileşeninde göster
-            console.error('Login failed', errorMessage);
-          } else if (error.request) {
-            // Sunucuya yapılan istek başarılı ancak yanıt alınamamışsa
-            this.errorMessage = 'Server not responding. Please try again later.';
-            console.error('Server not responding:', error.request);
-          } else {
-            // Diğer hata türleri
-            this.errorMessage = 'An error occurred. Please try again.';
-            console.error('Error', error.message);
-          }
+          // Hata durumunda mesaj göster
+          this.errorMessage = error.response?.data?.message || 'Login failed';
         }
       }
     }
@@ -138,8 +145,8 @@
   }
 
   .error-message {
-    
     text-align: center;
     margin-top: 10px;
+    color: black;
   }
 </style>

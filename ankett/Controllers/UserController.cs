@@ -1,4 +1,4 @@
-using ankett.Models;
+ï»¿using ankett.Models;
 using ankett.Models.Dto;
 using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
@@ -51,6 +51,11 @@ namespace ankett.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
+            var recaptchaValid = await VerifyRecaptchaAsync(loginDto.RecaptchaToken);
+            if (!recaptchaValid)
+                return BadRequest(new { message = "reCAPTCHA doÄŸrulamasÄ± baÅŸarÄ±sÄ±z." });
+
+
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
 
@@ -60,7 +65,7 @@ namespace ankett.Controllers
             var token = GenerateJwtToken(user.Id, user.Role == 0 ? "Admin" : "Employee");
             return Ok(new { user.Id, user.Role, token });
         }
-        // JWT Token oluþturma iþlemi
+        // JWT Token oluÅŸturma iÅŸlemi
         private string GenerateJwtToken(int userId, string role)
         {
 
@@ -68,7 +73,7 @@ namespace ankett.Controllers
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             if (string.IsNullOrEmpty(jwtKey))
             {
-                throw new ArgumentNullException("Jwt:Key", "JWT Anahtarý 'Jwt:Key' yapýlandýrma dosyasýndan alýnamýyor.");
+                throw new ArgumentNullException("Jwt:Key", "JWT AnahtarÄ± 'Jwt:Key' yapÄ±landÄ±rma dosyasÄ±ndan alÄ±namÄ±yor.");
             }
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -88,5 +93,27 @@ namespace ankett.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+
+        //recaptcha
+        private async Task<bool> VerifyRecaptchaAsync(string recaptchaToken)
+        {
+            var secretKey = _config["Recaptcha:SecretKey"];
+            using var httpClient = new HttpClient();
+            var content = new FormUrlEncodedContent(new[]
+            {
+        new KeyValuePair<string, string>("secret", secretKey),
+        new KeyValuePair<string, string>("response", recaptchaToken)
+    });
+
+            var response = await httpClient.PostAsync("https://www.google.com/recaptcha/api/siteverify", content);
+            var responseString = await response.Content.ReadAsStringAsync();
+            var recaptchaResult = System.Text.Json.JsonSerializer.Deserialize<RecaptchaResponse>(responseString);
+          
+            return recaptchaResult?.Success ?? false;
+        }
+
+        
+
     }
 }

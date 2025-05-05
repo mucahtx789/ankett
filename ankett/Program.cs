@@ -84,8 +84,7 @@ namespace ankett
             // Rate Limiting middleware'i ekle
             app.UseIpRateLimiting();
 
-            // CORS middleware’i mutlaka en üstte çalýþmalý
-            app.UseCors("AllowVueApp");
+           
 
             if (app.Environment.IsDevelopment())
             {
