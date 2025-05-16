@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite';
-import plugin from '@vitejs/plugin-vue';
+import vue from '@vitejs/plugin-vue';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [plugin()],
-    server: {
-        port: 63020,
-    }
+  plugins: [vue()],
+  server: {
+    port: 63020,
+  },
+  base: '/ankett/'  
 })
