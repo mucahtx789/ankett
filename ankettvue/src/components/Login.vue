@@ -40,7 +40,7 @@
         password: '',
         captchaToken: '',
         errorMessage: '',
-        siteKey: '6LcI-i4rAAAAAC31kisMVX4-8yiKEQ3KQV29oW6Q' // siteKey burada
+        siteKey: '6Lfyy80rAAAAAB2reCHUNasODDnzZ36qnhif2Ohx' // siteKey burada
       };
     },
     methods: {
