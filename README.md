@@ -23,4 +23,4 @@
 ![Anket Listesi](screenshots/Screenshot_2.jpg)
 
 ### Anket Sonuçları
-![Yanıt Sonuçları](screenshotsScreenshot_4.jpg)
+![Anket Sonuçları](screenshots/Screenshot_4.jpg)
